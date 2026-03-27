@@ -291,8 +291,7 @@ def webhook():
             "/prs <owner/repo> - List pull requests for the connected repository.\n"
             "/search <owner/repo> - Search for issues or pull requests in the connected repository.\n"
             "/issues <owner/repo> - List issues for the connected repository.\n"
-            "/help - Show this help message.\n"
-            "For more information, please refer to the GitHub repository (if you have access): https://github.com/IIC3103-2026-01/tarea-1-gabo1243"
+            "/help - Show this help message."
         )
         send_message(chat_id, help_message)
     
