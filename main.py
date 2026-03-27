@@ -4,6 +4,7 @@ from utils import (send_message, login, get_token, check_user_connected, does_re
                     is_repo_starred, get_hook, get_particular_commits)
 from datetime import date
 
+# Para la elaboración de esta tarea se ocupó Github Copilot, que ayudó con el código de la aplicación Flask y manejo de rutas
 
 app = Flask(__name__)
 
@@ -113,8 +114,18 @@ def webhook():
             send_message(chat_id, "Please provide a valid command after /disconnect. For example: /disconnect owner/repo")
             return "OK"
         repo_to_disconnect = next_text.strip()
+        
+  
+        for repo in bdd["repos"]:
+            if repo.owner == repo_to_disconnect.split("/")[0] and repo.repo == repo_to_disconnect.split("/")[1]:
+                if repo.status == "subscribed":
+
+                    delete_web_hook(repo.owner, repo.repo, bdd["token"], repo.hook_id)
         bdd["repos"] = [repo for repo in bdd["repos"] if not (repo.owner == repo_to_disconnect.split("/")[0] and repo.repo == repo_to_disconnect.split("/")[1])]
-        send_message(chat_id, f"Disconnected from repository: {repo_to_disconnect}")
+        bdd["token"] = None
+        bdd["chat_id"] = None 
+        send_message(chat_id, f"Disconnected from repository: {repo_to_disconnect} and token removed.")
+
 
     elif text.startswith("/repos"):
         if not check_user_connected(bdd, chat_id):
@@ -186,7 +197,9 @@ def webhook():
             print(response)
             total_contributors = len(response)
             weekly_contributors = sorted(response, key=lambda x: x["last_week"]["c"], reverse=True)[:3]
-            weekly_contributors = [f"{contributor['name']} (commits last week: {contributor['last_week']['c']})" for contributor in weekly_contributors]
+            weekly_contributors = [f"\n\n{contributor['name']} (commits last week: {contributor['last_week']['c']})" for contributor in weekly_contributors]
+            weekly_contributors = ", ".join(weekly_contributors) if len(weekly_contributors) > 0 else "No contributors with commits in the last week."
+            
             msg = f"Repository: {repo}\nTotal Contributors: {total_contributors}\nTop 3 Weekly Contributors: {weekly_contributors}"
             send_message(chat_id, msg)
         
@@ -205,14 +218,8 @@ def webhook():
             total_prs = len(response)
             formatted_prs = []
             for pr in response:
-                formatted_prs.append({
-                    "title": pr.get("title"),
-                    "url": pr.get("html_url"),
-                    "state": pr.get("state"),
-                    "created_at": pr.get("created_at"),
-                    "user": pr.get("user", {}).get("login")
-                })
-            msg = f"Repository: {repo}\nTotal Open Pull Requests: {total_prs}\nPull Requests Details: {formatted_prs}"
+                formatted_prs.append("\n\nTitle: " + pr.get("title") + "\nURL: " + pr.get("html_url") + "\nState: " + pr.get("state") + "\nCreated At: " + pr.get("created_at") + "\nUser: " + pr.get("user", {}).get("login"))
+            msg = f"Repository: {repo}\nTotal Open Pull Requests: {total_prs}\nPull Requests Details: {', '.join(formatted_prs)}"
             send_message(chat_id, msg)
         return "OK"
         
@@ -235,13 +242,8 @@ def webhook():
             total_commits = len(response)
             formatted_commits = []
             for commit in response:
-                formatted_commits.append({
-                    "message": commit.get("commit", {}).get("message"),
-                    "url": commit.get("html_url"),
-                    "author": commit.get("commit", {}).get("author", {}).get("name"),
-                    "date": commit.get("commit", {}).get("author", {}).get("date")
-                })
-            msg = f"Repository: {repo}\nTotal Commits Found: {total_commits}\nCommits Details: {formatted_commits}"
+                formatted_commits.append("\n\nMessage: " + commit.get("commit", {}).get("message") + "\nURL: " + commit.get("html_url") + "\nAuthor: " + commit.get("commit", {}).get("author", {}).get("name") + "\nDate: " + commit.get("commit", {}).get("author", {}).get("date"))
+            msg = f"Repository: {repo}\nTotal Commits Found: {total_commits}\nCommits Details: {', '.join(formatted_commits)}"
             send_message(chat_id, msg)
 
     elif text.startswith("/issues"):
@@ -257,14 +259,11 @@ def webhook():
             total_issues = len(response)
             formatted_issues = []
             for issue in response:
-                formatted_issues.append({
-                    "title": issue.get("title"),
-                    "url": issue.get("html_url"),
-                    "state": issue.get("state"),
-                    "created_at": issue.get("created_at"),
-                    "user": issue.get("user", {}).get("login")
-                })
-            msg = f"Repository: {repo}\nTotal Open Issues: {total_issues}\nIssues Details: {formatted_issues}"
+                if "pull_request" in issue:
+                    continue
+                formatted_issues.append("\n\nTitle: " + issue.get("title") + "\nURL: " + issue.get("html_url") + "\nState: " + issue.get("state") + "\nCreated At: " + issue.get("created_at") + "\nUser: " + issue.get("user", {}).get("login"))
+
+            msg = f"Repository: {repo}\nTotal Open Issues: {total_issues}\nIssues Details: {', '.join(formatted_issues)}"
             send_message(chat_id, msg)
         return "OK"
 
@@ -292,7 +291,8 @@ def webhook():
             "/prs <owner/repo> - List pull requests for the connected repository.\n"
             "/search <owner/repo> - Search for issues or pull requests in the connected repository.\n"
             "/issues <owner/repo> - List issues for the connected repository.\n"
-            "/help - Show this help message."
+            "/help - Show this help message.\n"
+            "For more information, please refer to the GitHub repository (if you have access): https://github.com/IIC3103-2026-01/tarea-1-gabo1243"
         )
         send_message(chat_id, help_message)
     

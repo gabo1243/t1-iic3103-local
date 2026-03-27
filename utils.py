@@ -89,7 +89,13 @@ def get_particular_commits(owner, repo, token, keyword):
     response = requests.get(url, headers={"Authorization": f"token {token}"}, params={"q": keyword})
     print("Getting commits with keyword. Status:", response.status_code)
     if response.status_code == 200:
-        return response.json()
+        final_response = []
+        for commit in response.json():
+            if ((keyword.lower() in commit.get("commit", {}).get("message", "").lower()) or (keyword.lower() in commit.get("commit", {}).get("author", {}).get("name", "").lower()) or
+                (keyword.lower() in commit.get("commit", {}).get("author", {}).get("email", "").lower()) or (keyword.lower() in commit.get("html_url", "").lower())
+                or (keyword.lower() in commit.get("commit", {}).get("author", {}).get("date", "").lower())):
+                final_response.append(commit)
+        return final_response
     return None
 
 def get_token(code):
@@ -131,13 +137,15 @@ def create_web_hook(owner, repo, token):
 
 def delete_web_hook(owner, repo, token, hook_id):
     url = f"https://api.github.com/repos/{owner}/{repo}/hooks/{hook_id}"
-    response = requests.delete(url, headers={"Authorization": f"token {token}"})
+    response = requests.delete(url, headers={"Authorization": f"token {token}", "Accept": "application/vnd.github+json"})
+    print("HOOK ID:", hook_id)
+    print("Deleting webhook:", response)
     print("Deleting webhook. Status:", response.status_code)
     return response.status_code == 204
 
 def is_repo_starred(owner, repo, token):
     url = f"https://api.github.com/user/starred/{owner}/{repo}"
-    response = requests.get(url, headers={"Authorization": f"token {token}"})
+    response = requests.get(url, headers={"Authorization": f"token {token}", })
     print("Checking if repo is starred. Status:", response.status_code)
     return response.status_code == 204
 
