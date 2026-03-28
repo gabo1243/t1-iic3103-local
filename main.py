@@ -121,10 +121,13 @@ def webhook():
                 if repo.status == "subscribed":
 
                     delete_web_hook(repo.owner, repo.repo, bdd["token"], repo.hook_id)
-        bdd["repos"] = [repo for repo in bdd["repos"] if not (repo.owner == repo_to_disconnect.split("/")[0] and repo.repo == repo_to_disconnect.split("/")[1])]
+        # bdd["repos"] = [repo for repo in bdd["repos"] if not (repo.owner == repo_to_disconnect.split("/")[0] and repo.repo == repo_to_disconnect.split("/")[1])]
         bdd["token"] = None
-        bdd["chat_id"] = None 
-        send_message(chat_id, f"Disconnected from repository: {repo_to_disconnect} and token removed.")
+        bdd["chat_id"] = None
+        bdd["user_id"] = None
+        bdd["repos"] = []
+        bdd["msgs"] = dict()
+        send_message(chat_id, f"Disconnected from all repositories, removed webhooks from {repo_to_disconnect} and token removed.")
 
 
     elif text.startswith("/repos"):
@@ -285,8 +288,8 @@ def webhook():
             "/connect <owner/repo> - Connect your GitHub account and specify a repository.\n"
             "/disconnect <owner/repo> - Disconnect from a specific repository.\n"
             "/repos - List your connected repositories.\n"
-            "/subscribe <owner/repo> - Subscribe to notifications for the connected repository.\n"
-            "/unsubscribe <owner/repo> - Unsubscribe from notifications for the connected repository.\n"
+            "/subscribe <owner/repo> - Subscribe to issue notifications for the connected repository.\n"
+            "/unsubscribe <owner/repo> - Unsubscribe from issue notifications for the connected repository.\n"
             "/stats <owner/repo> - Show statistics for the connected repository.\n"
             "/prs <owner/repo> - List pull requests for the connected repository.\n"
             "/search <owner/repo> - Search for issues or pull requests in the connected repository.\n"
