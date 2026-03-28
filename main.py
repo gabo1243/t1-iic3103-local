@@ -205,6 +205,8 @@ def webhook():
             
             msg = f"Repository: {repo}\nTotal Contributors: {total_contributors}\nTop 3 Weekly Contributors: {weekly_contributors}"
             send_message(chat_id, msg)
+        else:
+            send_message(chat_id, f"Could not retrieve statistics for the repository: {repo}. Please ensure the repository exists and is accessible with the provided token.")
         
         return "OK"
 
