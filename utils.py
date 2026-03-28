@@ -62,18 +62,21 @@ def get_weekly_contributors(owner, repo, token):
     url = f"https://api.github.com/repos/{owner}/{repo}/stats/contributors"
     response = requests.get(url, headers={"Authorization": f"token {token}"})
     print("Getting weekly contributors. Status:", response.status_code)
-    if response.status_code == 200:
-        list_response = response.json()
-        data = []
-        for contributor in list_response:
-            if contributor["author"] is None:
-                continue
-            data.append({
-                "name": contributor["author"]["login"],
-                "total": contributor["total"],
-                "last_week": contributor["weeks"][-1] if contributor["weeks"] else {"w": None, "a": 0, "d": 0, "c": 0}
-            })
-        return data
+    if response.status_code == 200 or response.status_code == 202:
+        try:
+            list_response = response.json()
+            data = []
+            for contributor in list_response:
+                if contributor["author"] is None:
+                    continue
+                data.append({
+                    "name": contributor["author"]["login"],
+                    "total": contributor["total"],
+                    "last_week": contributor["weeks"][-1] if contributor["weeks"] else {"w": None, "a": 0, "d": 0, "c": 0}
+                })
+            return data
+        except Exception as e:
+            print("Error processing contributors data:", e)
     return None
 
 def get_issues(owner, repo, token):
