@@ -197,6 +197,10 @@ def webhook():
         repo = next_text.strip()
         response = get_weekly_contributors(repo.split("/")[0], repo.split("/")[1], bdd["token"])
         if response is not None:
+            if response == 202:
+                send_message(chat_id, f"Statistics for the repository: {repo} are being processed. Please try again later.")
+                return "OK"
+
             print(response)
             total_contributors = len(response)
             weekly_contributors = sorted(response, key=lambda x: x["last_week"]["c"], reverse=True)[:3]
